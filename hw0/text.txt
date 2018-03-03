@@ -1,4 +1,1 @@
-vishal  ashok
-srivastav
-ram "2#
-ram
+The BeagleBone board on its own is too complex a device to be used by a general audience; it is the ability of the BeagleBone to run embedded Linux that makes the resulting platform accessible, adaptable, and powerful. Together, Linux and embedded systems enable ease of development for devices that can meet future challenges in smart buildings, the Internet of Things (IoT), robotics, smart energy, smart cities, human‐computer interaction (HCI), cyber-physical systems, 3D printing, advanced vehicular systems, and many, manymore applications. 
