@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define TRUE  1
 #define FALSE 0 
@@ -13,7 +14,7 @@ int main(int argc, char *argv[])
     bool insideWord = FALSE, newLine = TRUE;
     FILE * fp;
 
-    fp = fopen(argv[1], "r");
+    fp = fopen(argv[argc-1], "r");
         
     if(!fp)
     {
@@ -47,6 +48,10 @@ int main(int argc, char *argv[])
         acount++;
     }    
     
-    printf(" %d  %d %d %s\n", lcount, wcount, acount, argv[1]);
+    if(!strcmp(argv[1],"-l"))
+        printf(" %d %s\n", lcount, argv[argc-1]);
+    else    
+        printf(" %d  %d %d %s\n", lcount, wcount, acount, argv[argc-1]);
+ 
     return 0;
 }
