@@ -63,7 +63,6 @@ void InitMyMalloc( void )
 *  return:
 *            void * - a pointer of memory location as a void *
 **************************************************************************/
-
 void* MyMalloc(int size)
 {
     mallocOvrHd_t * ptrAllocMemBlock          = hdrFreeList;
