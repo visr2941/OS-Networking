@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) 
 {
-    char ent = NULL;
+    char ent = 0;
     int lcount = 0, wcount = 0,  acount = 0;
     bool insideWord = FALSE, newLine = TRUE;
     FILE * fp;
