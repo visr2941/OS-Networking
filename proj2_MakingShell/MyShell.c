@@ -7,76 +7,110 @@
 #include <string.h>
 #include <fcntl.h>
 
+/*********************************************************************************************
+********************** Macro Definition ******************************************************
+*********************************************************************************************/
 
 #define MAX_NUM_CHAR_CMD    200
-#define PATH                {"/bin/", "/usr/bin/", "/home/vishal/Desktop/GitRepo/OS/proj2_MakingShell/", NULL}
+#define MAX_NUM_OF_ARG      20
+#define PATH                {"/bin/", "/usr/bin/", NULL}
+#define DEBUG               fprintf(stdout, "XXXXXX\n")
+#define TRUE                1
+#define FALSE               0
+#define EXIT_SUCCESS        0
+#define EXIT_FAILURE       -1
 
+/*********************************************************************************************
+********************** Global Variables ******************************************************
+*********************************************************************************************/
 
 const char * shell = "MyCLI>";
 const char * path[] = PATH;
 
-#define DEBUG fprintf(stdout, "before exit  %s\n", argList[count])
 
+
+/*********************************************************************************************
+********************** Main Routine **********************************************************
+*********************************************************************************************/
 
 int main()
 {
-    pid_t shellProc, cmdProc;
-    int exitStatus;
-    char userCmd[MAX_NUM_CHAR_CMD];
-    char * userCmdToken;
-    char * argList[10];
-    char func[100] ;
-    int count = 0;
+    pid_t   shellProc, cmdProc;
+    int     exitStatus;
+    char    userCmd[MAX_NUM_CHAR_CMD];
+    char*   userCmdToken;
+    char*   argList[MAX_NUM_OF_ARG];
+    char    func[MAX_NUM_CHAR_CMD] ;
+    int     count = 0;
     
+    // a new Shell process (CLI)
     shellProc = fork();
-        
+    
+    // a shell process will always run until the user or the system kills it
     if(shellProc)
         waitpid(shellProc, &exitStatus, 0);
+    // child process
     else
     {
         printf("\nEntering into a personalized shell... \n\n");
-        while(1)
+        
+        // entering into infinite loop 
+        while(TRUE)
         {
             printf("%s ", shell);
-            fgets(userCmd, sizeof(userCmd), stdin);
             
+            // if user issues Ctrl+D commands
+            if(fgets(userCmd, sizeof(userCmd), stdin) == NULL)
+            {
+                printf("\n");
+                break;
+            }
+                
+            // taking the command unput from the user
             userCmdToken = strtok(userCmd, "\n");
             if(userCmdToken == NULL)
                 continue;
             
+            // creating a new process to run the program
             cmdProc = fork();
             
+            // extracting the main function name
             argList[count] = strtok(userCmdToken, " ");
             
+            // parent process inside the shell
             if(cmdProc)
             {
+                // cd and exit command need to be handled nside the parent process
                 if(!strcmp(argList[count], "cd"))
                 {
                     if(chdir(strtok(NULL, " ")))
-                        fprintf(stderr, "cd: directory not found\n");
+                        fprintf(stderr, "cd: error occured\n");
                 }
                 else if(!strcmp(argList[count], "exit"))
-                    exit(0);
+                    exit(EXIT_SUCCESS);
                 
+                // waiting for the child process to exit
                 waitpid(cmdProc, &exitStatus, 0);
                 if(exitStatus)
-                    fprintf(stderr, "%s: command not found!\n", argList[count]);
+                    fprintf(stderr, "%s: error occured!\n", argList[count]);
             }
+            // child process to execute the command issued by the user
             else
             {
+                // cd command is supposed to be not handled by the child process 
                 if(!strcmp(argList[count], "cd"))
-                    exit(0);
+                    exit(EXIT_SUCCESS);
                     
-                
-                while(1)
+                // searching the function in the PATH of the current environment (our shell)
+                while(TRUE)
                 {
                     if(path[count] == NULL)
-                         exit(-1);
+                         exit(EXIT_FAILURE);
                     
                     strcpy(func, path[count]);
                     strcat(func, argList[0]);
                     
-                    if(access(func, X_OK) == 0)
+                    if(access(func, X_OK) == TRUE)
                         break;
                     else
                     {
@@ -85,29 +119,42 @@ int main()
                     }
                 }
 
+                // re-initializing the variable
                 count = 0;
                 
-                while(argList[count]!=NULL)
+                // making the argument for execv from the user input
+                while((argList[++count] = strtok(NULL, " "))!=NULL)
                 {
-                    count++;
-                    argList[count] = strtok(NULL, " ");
-
-                    if(argList[count] != NULL)
-                        if(!strcmp(argList[count], ">"))
-                        {
-                            int fd = open(strtok(NULL, " "), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-                            dup2(fd, 1);
-                        
-                            argList[count] = NULL;
-                            break;
-                        }
-                        
+                    // redirection operator - writing to an existing or a new file
+                    if(!strcmp(argList[count], ">"))
+                    {
+                        // create if doesn't exist, clear the file if exist, give user rights
+                        int fd = open(strtok(NULL, " "), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+                        // cahnging output from stdout(1) to file(fd) 
+                        dup2(fd, 1);
+                       
+                        argList[count] = NULL;
+                        break;
+                    }
+                    // redirection operator >> - appending to an existing file
+                    else if(!strcmp(argList[count], ">>"))
+                    {
+                        // open exiting fle for read and write, give user rights
+                        int fd = open(strtok(NULL, " "), O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
+                        // cahnging output from stdout(1) to file(fd) 
+                        dup2(fd, 1);
+                       
+                        argList[count] = NULL;
+                        break;
+                    }                    
                 }
                 
+                // to execute the program input by the user
                 execv(func, argList);
-
-                exit(0);
+                
+                // execv doesn't return if successful, in case of failure it returns back
+                exit(EXIT_FAILURE);
             }
-        }
+        } // end of the mail while loop to run the CLI
     }
-}
+} // end of main
