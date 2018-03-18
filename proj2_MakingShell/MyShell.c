@@ -108,7 +108,7 @@ int main()
                     strcpy(func, path[count]);
                     strcat(func, argList[0]);
                     
-                    if(access(func, X_OK) == TRUE)
+                    if(access(func, X_OK) == 0)
                         break;
                     else
                     {
