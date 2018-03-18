@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -75,7 +76,7 @@ int main ()
 }
 */
 
-/*
+
 int main ()
 {
     int child_status;
@@ -90,7 +91,7 @@ int main ()
         NULL // The argument list must end with a NULL.
     };
     //Spawn a child process running the "ls" command. Ignore the returned child process ID.
-    //spawn ("ls", arg_list);
+    spawn ("ls", arg_list);
     // Wait for the child process to complete.    
     wait (&child_status);
     
@@ -100,7 +101,7 @@ int main ()
         printf ("the child process exited abnormally %d\n", WTERMSIG(child_status));
     return 0;
 }
-*/
+
 
 /*
 int main ()
