@@ -18,7 +18,7 @@
 #define TRUE                1
 #define FALSE               0
 #define EXIT_SUCCESS        0
-#define EXIT_FAILURE       -1
+#define EXIT_FAIL          -1
 
 /*********************************************************************************************
 ********************** Global Variables ******************************************************
@@ -105,7 +105,7 @@ int main()
                 while(TRUE)
                 {
                     if(path[count] == NULL)
-                         exit(EXIT_FAILURE);
+                         exit(EXIT_FAIL);
                     
                     strcpy(func, path[count]);
                     strcat(func, argList[0]);
@@ -153,7 +153,7 @@ int main()
                 execv(func, argList);
                 
                 // execv doesn't return if successful, in case of failure it returns back
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAIL);
             }
         } // end of the mail while loop to run the CLI
     }
