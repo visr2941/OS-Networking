@@ -120,7 +120,7 @@ int main()
                 // re-initializing the variable
                 count = 0;
                 
-                // making the argument for execv from the user input
+                // making the argument for execv (array of string ptr) from the user input "userCmd"
                 while((argList[++count] = strtok(NULL, " "))!=NULL)
                 {
                     // redirection operator - writing to an existing or a new file
