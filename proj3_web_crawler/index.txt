@@ -1,0 +1,6 @@
+Welcome to the home page!  Here are some other pages:
+
+link:page1.txt
+link:page2.txt
+link:page3.txt
+link:page4.txt
