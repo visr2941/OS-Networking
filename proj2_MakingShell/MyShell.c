@@ -95,7 +95,7 @@ int main()
             // child process to execute the command issued by the user
             else
             {
-                // cd command is supposed to be not handled by the child process 
+                // cd command is supposed to be handled by the parent process 
                 if(!strcmp(argList[count], "cd"))
                     exit(EXIT_SUCCESS);
                     
@@ -121,14 +121,14 @@ int main()
                 count = 0;
                 
                 // making the argument for execv (array of string ptr) from the user input "userCmd"
-                while((argList[++count] = strtok(NULL, " "))!=NULL)
+                while((argList[++count] = strtok(NULL, " ")) != NULL)
                 {
                     // redirection operator - writing to an existing or a new file
                     if(!strcmp(argList[count], ">"))
                     {
                         // create if doesn't exist, clear the file if exist, give user rights
                         int fd = open(strtok(NULL, " "), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-                        // cahnging output from stdout(1) to file(fd) 
+                        // changing output from stdout(1) to file(fd) 
                         dup2(fd, 1);
                        
                         argList[count] = NULL;
@@ -139,7 +139,7 @@ int main()
                     {
                         // open exiting fle for read and write, give user rights
                         int fd = open(strtok(NULL, " "), O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
-                        // cahnging output from stdout(1) to file(fd) 
+                        // changing output from stdout(1) to file(fd) 
                         dup2(fd, 1);
                        
                         argList[count] = NULL;
