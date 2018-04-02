@@ -1,6 +1,7 @@
 /* 
-** This is an echo server - it will print the data as received from the client. This server can listen to the multiple 
-** client at once using parent-child process. This can accept request from any IP address.
+** This is an echo server - it will print the data as received from the client. This server 
+* can listen to the multiple client at once using parent-child process. This server can accept 
+* request from any IP address.
 */
 
 #include <stdio.h>
@@ -13,6 +14,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
+
+/*****************************************************************************************
+ ************************** MACRO DEFINITIONS ********************************************
+******************************************************************************************/
 
 #define PRINT_ERROR(x)      fprintf(stderr, "Parent Process: prog exit - error code %d!\n", x);
 #define PRINT_MSG(x)        fprintf(stdout, "%d: %s", ntohs(sClientSockAddr.sin_port), x);
@@ -28,6 +33,10 @@
     104:    couldn't accept the new connection!
     105:    couldn't close the socket!
  */
+
+
+/******************************************************************************************/
+
 
 int main(int argc, char* argv[])
 {
