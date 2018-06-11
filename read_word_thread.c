@@ -3,9 +3,11 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#define NO_THREADS_COUNT 10
+
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  cv[5];
-int done[5] = {0};
+pthread_cond_t  cv[NO_THREADS_COUNT];
+int done[NO_THREADS_COUNT] = {0};
 int eof_done = 0;
 
 FILE * fp = NULL;
@@ -34,7 +36,7 @@ void PrintWord ( int i )
         printf("%s %d\n", str, i);
     else
     {
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < NO_THREADS_COUNT; i++)
         {
             eof_done = 1;
             done[i] = 1;
@@ -46,12 +48,13 @@ void PrintWord ( int i )
 void * WaitForInvoke( void * arg )
 {
     int i = *((int *) arg);
-    int next = (i+1)%5;
-    //sleep(1);    
+    int next = (i+1)%NO_THREADS_COUNT;
+    sleep(1);    
     while(feof(fp) == 0)
     {   
-        printf("thread %d\n", i);
         pthread_mutex_lock(&lock);
+        printf("thread %d\n", i);
+
         while(done[i]==0)
         {
             printf("wait\n");
@@ -62,7 +65,10 @@ void * WaitForInvoke( void * arg )
         done[i] = 0;
         pthread_cond_signal(&cv[next]);
         while((eof_done == 0) && (feof(fp) == 0))
+        {
+            printf("wait on eof variable***\n");
             pthread_cond_wait(&cv[i], &lock);
+        }
         pthread_mutex_unlock(&lock);
     }
     printf("-------------------------exiting %d\n", i);
@@ -71,27 +77,27 @@ void * WaitForInvoke( void * arg )
 int main()
 {
     fp = fopen("t.txt", "r");
-    pthread_t pid[5];
+    pthread_t pid[NO_THREADS_COUNT];
 
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < NO_THREADS_COUNT; i++)
     {
         pthread_cond_init( &cv[i], NULL );
     }
     
-    int temp[5];
-    for(int i = 0; i < 5; i++)
+    int temp[NO_THREADS_COUNT];
+    for(int i = 0; i < NO_THREADS_COUNT; i++)
     {
         temp[i] = i;
         pthread_create(&pid[i], NULL, WaitForInvoke, (void *)&temp[i]);
     }
-    //sleep(1);
+    sleep(1);
     pthread_mutex_lock(&lock);
 
     done[0] = 1;
     pthread_cond_signal(&cv[0]);
     pthread_mutex_unlock(&lock);    
 
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < NO_THREADS_COUNT; i++)
         pthread_join(pid[i], NULL);
 
     fclose(fp);
