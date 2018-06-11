@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  cv[5];
@@ -30,18 +31,26 @@ void PrintWord ( int i )
     GetTheWord(str);
     if(feof(fp) == 0)
         printf("%s %d\n", str, i);
+    else
+    {
+        for(int i = 0; i < 5; i++)
+        {
+            done[i] = 1;
+            pthread_cond_signal(&cv[i]);
+        }
+    }
 }
 
 void * WaitForInvoke( void * arg )
 {
     int i = *((int *) arg);
     int next = (i+1)%5;
-    
+    //sleep(1);    
     while(feof(fp) == 0)
     {   
         //printf("thread %d\n", i);
         pthread_mutex_lock(&lock);
-        while(done[i]==0)
+        while(done[i]==0 && (feof(fp) == 0))
             pthread_cond_wait(&cv[i], &lock);
         PrintWord(i);
         done[next] = 1;
