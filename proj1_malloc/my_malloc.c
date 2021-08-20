@@ -196,7 +196,9 @@ static void _ProcessNodeFound(ListNode_t* tmpHead, int size)
     {
         if (negSize) {
             tmpHead->left->right = tmpHead->right;
-            tmpHead->right->left = tmpHead->left;
+            if (tmpHead->right) {
+                tmphead->right->left = tmpHead->left;
+            }
         } else {
             // update header of newly free node
             _InsertFreeNode(tmpHead->left, tmpHead->right, newNode);
