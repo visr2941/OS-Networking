@@ -183,18 +183,28 @@ static void _InsertFreeNode(ListNode_t* l_node, ListNode_t* r_node, ListNode_t* 
 static void _ProcessNodeFound(ListNode_t* tmpHead, int size)
 {
     int newSize = tmpHead->size - size - HEADER_SIZE;
+    bool negSize = false;
     tmpHead->size = size;
     ListNode_t* newNode = (ListNode_t*)((char*)GET_BUFFER_PTR_FROM_HEAD(tmpHead) + size);
     newNode->size = newSize;
 
+    if (newSize < 0) {
+        negSize = true;
+    }
+
     if(tmpHead != head)
     {
-        // update header of newly free node
-        _InsertFreeNode(tmpHead->left, tmpHead->right, newNode);
+        if (negSize) {
+            tmpHead->left->right = tmpHead->right;
+            tmpHead->right->left = tmpHead->left;
+        } else {
+            // update header of newly free node
+            _InsertFreeNode(tmpHead->left, tmpHead->right, newNode);
+        }
     }
     else
     {
-        head = newNode;
+        head = negSize ? NULL : newNode;
     }
 
     // update allocated node header
