@@ -3,6 +3,7 @@
 #include "my_malloc.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "my_malloc.h"
 
 /************************************************************************************************************
@@ -26,7 +27,6 @@ typedef struct _ListNode {
  *                                      Static Functions Prototype
  * **********************************************************************************************************/
 static int   _FixAlignment8Bytes(int sz);
-static void  _InsertFreeNode(ListNode_t* l_node, ListNode_t* r_node, ListNode_t* newNode);
 static void  _ProcessNodeFound(ListNode_t* tmpHead, int size);
 static void* _FirstFitAlgorithm(int size);
 static void  _CoalesceFreeNodes(ListNode_t* node);
@@ -58,6 +58,9 @@ void *MyMalloc(int size)
 
 void MyFree(void *buffer)
 {
+    // best to keep the free list sorted based on address - That is free blocks with 
+    // lower addresses occur before free blocks with higher addresses on the list.
+
     if (buffer != NULL && ((long int)buffer & -248L))
     {
         ListNode_t* tmpHead = head;
@@ -67,6 +70,8 @@ void MyFree(void *buffer)
         if (head == NULL)
         {
             head = node;
+            head->right = NULL;
+            head->left = NULL;
             return;
         }
 
@@ -95,6 +100,7 @@ void MyFree(void *buffer)
         {
             tmpHead->left = node;
             node->right = tmpHead;
+            node->left = NULL;
             head = node;
         }
 
@@ -122,48 +128,16 @@ static void* _FirstFitAlgorithm(int size)
 {
     ListNode_t* tmpHead = head;
 
-    // On the first go, we will try to find a better match so that
-    // we can accomodate a header block for another free Node. If 
-    // we don't find any such node, we try fit in the closest
-    // size free node even if it doesn't have space for free node
-    // header
-    while (tmpHead->right != NULL && size > tmpHead->size + HEADER_SIZE)
+    while (tmpHead->right != NULL && size > tmpHead->size)
     {
         tmpHead = tmpHead->right;
     }
 
-    // if node found on the first traverse
-    if (size <= (tmpHead->size + HEADER_SIZE))
+    if (tmpHead != NULL)
     {
         // Free space found, update the free list and the 
         // newly allocated node header
         _ProcessNodeFound(tmpHead, size);
-    }
-    else
-    {
-        // 2nd traverse to find the node
-        tmpHead = head;
-        while(tmpHead != NULL)
-        {
-            while (tmpHead->right != NULL && size > tmpHead->size)
-            {
-                tmpHead = tmpHead->right;
-            }
-
-            if ((tmpHead->size - size) < HEADER_SIZE)
-            {
-                break;
-            }
-
-            tmpHead = tmpHead->right;
-        }
-
-        if (tmpHead != NULL)
-        {
-            // Free space found, update the free list and the 
-            // newly allocated node header
-            _ProcessNodeFound(tmpHead, size);
-        }
     }
 
     return (tmpHead != NULL ? tmpHead->buffer : NULL);
@@ -174,19 +148,13 @@ static int _FixAlignment8Bytes(int sz)
     return ((sz+7) >> 3) << 3;
 }
 
-static void _InsertFreeNode(ListNode_t* l_node, ListNode_t* r_node, ListNode_t* newNode)
-{
-    l_node->right = newNode;
-    newNode->right = r_node;
-}
-
 static void _ProcessNodeFound(ListNode_t* tmpHead, int size)
 {
     int newSize = tmpHead->size - size - HEADER_SIZE;
     bool negSize = false;
     tmpHead->size = size;
+
     ListNode_t* newNode = (ListNode_t*)((char*)GET_BUFFER_PTR_FROM_HEAD(tmpHead) + size);
-    newNode->size = newSize;
 
     if (newSize < 0) {
         negSize = true;
@@ -197,15 +165,26 @@ static void _ProcessNodeFound(ListNode_t* tmpHead, int size)
         if (negSize) {
             tmpHead->left->right = tmpHead->right;
             if (tmpHead->right) {
-                tmphead->right->left = tmpHead->left;
+                tmpHead->right->left = tmpHead->left;
             }
         } else {
-            // update header of newly free node
-            _InsertFreeNode(tmpHead->left, tmpHead->right, newNode);
+            newNode->size = newSize;
+            newNode->left = tmpHead->left;
+            newNode->right = tmpHead->right;
+
+            tmpHead->left->right = newNode;
+            if (tmpHead->right) {
+                tmpHead->right->left = newNode;
+            }
         }
     }
     else
     {
+        if (!negSize) {
+            newNode->size = newSize;
+            newNode->right = head->right;
+            newNode->left = NULL;
+        }
         head = negSize ? NULL : newNode;
     }
 
